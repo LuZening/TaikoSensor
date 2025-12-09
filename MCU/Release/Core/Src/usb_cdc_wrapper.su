@@ -1,0 +1,4 @@
+usb_cdc_wrapper.c:75:15:CDC_Itf_DeInit	0	static
+usb_cdc_wrapper.c:176:15:CDC_Itf_Receive	8	static
+usb_cdc_wrapper.c:59:15:CDC_Itf_Init	8	static
+usb_cdc_wrapper.c:90:15:CDC_Itf_Control	4	static

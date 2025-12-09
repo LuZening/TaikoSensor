@@ -1,0 +1,14 @@
+sensor_config.c:56:6:sensor_config_set_defaults	20	static
+sensor_config.c:89:6:sensor_config_load_from_flash	8	static
+sensor_config.c:39:6:sensor_config_init	8	static
+sensor_config.c:116:6:sensor_config_save_to_flash	48	static,ignoring_inline_asm
+sensor_config.c:184:10:sensor_config_calculate_checksum	0	static
+sensor_config.c:206:6:HAL_UART_RxCpltCallback	8	static
+sensor_config.c:218:6:HAL_UART_ErrorCallback	0	static
+sensor_config.c:469:6:sensor_config_send_string	8	static
+sensor_config.c:464:6:sensor_config_send_ok	0	static
+sensor_config.c:474:6:sensor_config_send_float	56	static
+sensor_config.c:499:6:sensor_config_send_uint16	48	static
+sensor_config.c:227:6:sensor_config_process_command	144	static
+sensor_config.c:508:6:sensor_config_is_terminal_mode	0	static
+sensor_config.c:513:6:sensor_config_save_pending	0	static

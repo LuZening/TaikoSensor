@@ -1,0 +1,11 @@
+usbd_composite_wrapper.c:286:16:USBD_Composite_EP0_TxSent	16	static
+usbd_composite_wrapper.c:311:16:USBD_Composite_EP0_RxReady	16	static
+usbd_composite_wrapper.c:332:16:USBD_Composite_DataIn	16	static
+usbd_composite_wrapper.c:363:16:USBD_Composite_DataOut	16	static
+usbd_composite_wrapper.c:394:16:USBD_Composite_SOF	16	static
+usbd_composite_wrapper.c:415:17:USBD_Composite_GetFSConfigDescriptor	0	static
+usbd_composite_wrapper.c:427:17:USBD_Composite_GetHSConfigDescriptor	8	static
+usbd_composite_wrapper.c:438:17:USBD_Composite_GetDeviceQualifierDescriptor	0	static
+usbd_composite_wrapper.c:248:16:USBD_Composite_Setup	16	static
+usbd_composite_wrapper.c:218:16:USBD_Composite_DeInit	16	static
+usbd_composite_wrapper.c:173:16:USBD_Composite_Init	16	static

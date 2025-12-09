@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd:*)",
+      "Bash(awk '/USER CODE BEGIN 0/{flag=1;next}/USER CODE END 0/{flag=0}flag':*)",
+      "Bash(awk:*)",
+      "Bash(dir CoreIncpiezo_config.h CoreIncpiezosensor.h CoreSrcpiezosensor.c CoreSrcmain.c:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

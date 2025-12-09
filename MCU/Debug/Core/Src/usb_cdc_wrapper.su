@@ -1,0 +1,12 @@
+usb_cdc_wrapper.c:92:13:ring_buffer_init	0	static
+usb_cdc_wrapper.c:164:13:tx_ring_buffer_enqueue	12	static,ignoring_inline_asm
+usb_cdc_wrapper.c:200:17:tx_ring_buffer_dequeue	4	static
+usb_cdc_wrapper.c:230:13:rx_ring_buffer_enqueue	0	static
+usb_cdc_wrapper.c:248:13:rx_ring_buffer_dequeue	0	static
+usb_cdc_wrapper.c:300:15:CDC_Itf_DeInit	0	static
+usb_cdc_wrapper.c:315:15:CDC_Itf_Control	0	static
+usb_cdc_wrapper.c:401:15:CDC_Itf_Receive	16	static
+usb_cdc_wrapper.c:280:15:CDC_Itf_Init	8	static
+usb_cdc_wrapper.c:269:6:usb_cdc_enqueue_tx	8	static
+usb_cdc_wrapper.c:440:9:CDC_Transmit_FS	8	static
+usb_cdc_wrapper.c:464:6:usb_cdc_process	88	static

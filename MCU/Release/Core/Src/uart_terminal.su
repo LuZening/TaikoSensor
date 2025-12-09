@@ -1,0 +1,5 @@
+uart_terminal.c:31:6:uart_terminal_init	8	static
+uart_terminal.c:39:6:uart_terminal_receive_byte	32	static
+uart_terminal.c:82:6:uart_terminal_tick	16	static
+uart_terminal.c:98:6:uart_terminal_process_idle	8	static
+uart_terminal.c:118:6:uart_terminal_is_active	0	static

@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(test:*)",
+      "Bash(findstr /s /n \"USBD_CDC_WRAPPER\" E:ProjectsRADIOProjectsTaikoSensorsMCU*.c)",
+      "Bash(findstr:*)",
+      "Bash(dir CoreIncusbd_composite_wrapper.h)",
+      "Bash(dir CoreSrcusbd_composite_wrapper.c)",
+      "Bash(echo:*)",
+      "Bash(arm-none-eabi-gcc:*)",
+      "Bash(grep:*)",
+      "Bash(certutil -hashfile uart_terminal.c MD5)",
+      "Bash(dir \".claude\" /B)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
