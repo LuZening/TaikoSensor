@@ -36,7 +36,8 @@ Core/Src/usb_cdc_wrapper.o: ../Core/Src/usb_cdc_wrapper.c \
  ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_core.h \
  ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h \
  ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ctlreq.h \
- ../Core/Inc/usb_cdc_wrapper.h ../Core/Inc/usbd_cdc_if.h
+ ../Core/Inc/usb_cdc_wrapper.h ../Core/Inc/usbd_cdc_if.h \
+ ../Core/Inc/uart_terminal.h
 
 ../USB_DEVICE/App/usbd_cdc.h:
 
@@ -117,3 +118,5 @@ Core/Src/usb_cdc_wrapper.o: ../Core/Src/usb_cdc_wrapper.c \
 ../Core/Inc/usb_cdc_wrapper.h:
 
 ../Core/Inc/usbd_cdc_if.h:
+
+../Core/Inc/uart_terminal.h:

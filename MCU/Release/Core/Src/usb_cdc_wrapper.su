@@ -1,4 +1,7 @@
-usb_cdc_wrapper.c:75:15:CDC_Itf_DeInit	0	static
-usb_cdc_wrapper.c:176:15:CDC_Itf_Receive	8	static
-usb_cdc_wrapper.c:59:15:CDC_Itf_Init	8	static
-usb_cdc_wrapper.c:90:15:CDC_Itf_Control	4	static
+usb_cdc_wrapper.c:300:15:CDC_Itf_DeInit	0	static
+usb_cdc_wrapper.c:401:15:CDC_Itf_Receive	24	static
+usb_cdc_wrapper.c:280:15:CDC_Itf_Init	8	static
+usb_cdc_wrapper.c:315:15:CDC_Itf_Control	8	static
+usb_cdc_wrapper.c:269:6:usb_cdc_enqueue_tx	12	static,ignoring_inline_asm
+usb_cdc_wrapper.c:440:9:CDC_Transmit_FS	8	static
+usb_cdc_wrapper.c:464:6:usb_cdc_process	88	static

@@ -1,5 +1,6 @@
-main.c:159:6:SystemClock_Config	96	static,ignoring_inline_asm
-main.c:90:5:main	48	static,ignoring_inline_asm
-main.c:478:6:HAL_ADC_ConvHalfCpltCallback	8	static
-main.c:505:6:HAL_ADC_ConvCpltCallback	8	static
-main.c:539:6:Error_Handler	0	static,ignoring_inline_asm
+main.c:90:6:xgood_led_blink_handler	16	static
+main.c:210:6:SystemClock_Config	96	static,ignoring_inline_asm
+main.c:135:5:main	48	static,ignoring_inline_asm
+main.c:529:6:HAL_ADC_ConvHalfCpltCallback	8	static
+main.c:554:6:HAL_ADC_ConvCpltCallback	8	static
+main.c:590:6:Error_Handler	0	static,ignoring_inline_asm

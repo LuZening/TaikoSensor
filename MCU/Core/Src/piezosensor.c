@@ -255,10 +255,10 @@ void extract_envelope_from_samples(uint16_t *samples, uint16_t sample_offset)
 
             /* Divide by 10 to get actual scaled value */
 //            scaled_envelope = scaled_envelope / 10;
-            scaled_envelope = scaled_envelope >> 3; // use /8 to replace /10, for efficiency
+            scaled_envelope = scaled_envelope >> 6; // use /64 to replace /100, for efficiency
             /* Clamp to ADC max */
-            if (scaled_envelope > 4095) {
-                scaled_envelope = 4095;
+            if (scaled_envelope > 65535) {
+                scaled_envelope = 65535;
             }
             envelope = (uint16_t)scaled_envelope;
         }

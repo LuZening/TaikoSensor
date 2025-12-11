@@ -48,4 +48,7 @@ void sensor_config_send_string(const char *str);
 void sensor_config_send_float(const char *prefix, float value);
 void sensor_config_send_uint16(const char *prefix, uint16_t value);
 
+/* Status functions */
+bool sensor_config_load_failed(void);
+
 #endif /* INC_SENSOR_CONFIG_H_ */

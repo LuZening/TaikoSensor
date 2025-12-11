@@ -23,16 +23,16 @@ typedef enum {
 ========== CONFIGURATION COMMANDS ==========
  Command        | Description                     | Example
  ---------------|---------------------------------|------------------
- mult0..4       | Sensor multipliers (0.1-4096)   | set mult0 10.5
- th0..4         | Sensor thresholds (0-65535)     | set th0 150
- base_th        | Base trigger threshold          | set base_th 200
- tour_dur       | Tournament duration (ms)        | set tour_dur 5
- cool_down      | Cooling down period (ms)        | set cool_down 15
- key_dur        | Key press duration (ms)         | set key_dur 20
- th_boost       | Threshold boost (0.1-10.0)      | set th_boost 1.5
- th_decay       | Decay factor (0.0-1.0)          | set th_decay 0.97
+ mult0..4       | Sensor multipliers (0.00-4096.00) | mult0=10.50
+ th0..4         | Sensor thresholds (0-65535)     | th0=150
+ base_th        | Base trigger threshold          | base_th=200
+ tour_dur       | Tournament duration (ms)        | tour_dur=5
+ cool_down      | Cooling down period (ms)        | cool_down=15
+ key_dur        | Key press duration (ms)         | key_dur=20
+ th_boost       | Threshold boost (0.00-10.00)    | th_boost=1.50
+ th_decay       | Decay factor (0.00-1.00)        | th_decay=0.97
 
- Query: Add '?' after variable      | Example: set base_th?
+ Query: Add '?' after variable      | Example: base_th?
  Save: Type 'save'                  | Save to flash
  Defaults: Type 'defaults'          | Restore defaults
  Reboot: Type 'reboot' or 'reset'   | Restart device

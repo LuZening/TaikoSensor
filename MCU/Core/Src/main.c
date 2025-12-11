@@ -58,6 +58,14 @@ DMA_HandleTypeDef hdma_usart3_rx;
 /* USER CODE BEGIN PV */
 /* DMA_BUFFER_SIZE is defined in piezo_config.h as SAMPLES_PER_MS * SENSOR_TOTAL_CHANNELS * 2 */
 static volatile __attribute__((aligned(4))) uint16_t arrADC1_DMA[DMA_BUFFER_SAMPLES] = {0};  // 480 samples for double buffering
+
+/* XGOOD LED blinking state when config load fails */
+typedef struct {
+    uint32_t last_toggle_ms;  // Last time LED was toggled
+    bool led_state;           // Current LED state (true = on)
+} XGOOD_BlinkState_t;
+
+static XGOOD_BlinkState_t g_xgood_blink = {0};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -71,6 +79,42 @@ static void MX_TIM3_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
+
+/*================= LED CONTROL FUNCTIONS =================*/
+
+/**
+ * @brief Handle XGOOD LED blinking when config load fails
+ * @param current_ms Current system time in milliseconds
+ * @note Blinks pattern: ON for 200ms, OFF for 800ms (1 second period)
+ */
+void xgood_led_blink_handler(uint32_t current_ms)
+{
+    if (!sensor_config_load_failed()) {
+        /* Config loaded successfully, don't blink */
+        return;
+    }
+
+    /* Check if it's time to toggle the LED */
+    uint32_t elapsed = current_ms - g_xgood_blink.last_toggle_ms;
+
+    if (g_xgood_blink.led_state) {
+        /* LED is currently ON - check if 200ms have passed */
+        if (elapsed >= 200) {
+            /* Turn LED OFF (active low, so set to 1) */
+            HAL_GPIO_WritePin(XGOOD_GPIO_Port, XGOOD_Pin, GPIO_PIN_SET);
+            g_xgood_blink.led_state = false;
+            g_xgood_blink.last_toggle_ms = current_ms;
+        }
+    } else {
+        /* LED is currently OFF - check if 800ms have passed */
+        if (elapsed >= 800) {
+            /* Turn LED ON (active low, so set to 0) */
+            HAL_GPIO_WritePin(XGOOD_GPIO_Port, XGOOD_Pin, GPIO_PIN_RESET);
+            g_xgood_blink.led_state = true;
+            g_xgood_blink.last_toggle_ms = current_ms;
+        }
+    }
+}
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
@@ -148,6 +192,9 @@ int main(void)
 
     /* Process USB CDC RX and TX in main loop (async mechanism) */
     usb_cdc_process();
+
+    /* Handle XGOOD LED blinking if config load failed */
+    xgood_led_blink_handler(g_system_ms);
 
     /* USER CODE END WHILE */
 
@@ -483,7 +530,6 @@ void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc)
 {
     if (hadc->Instance == ADC1)
     {
-		HAL_GPIO_WritePin(XGOOD_GPIO_Port, XGOOD_Pin, 1);
         /* Process first half of DMA buffer (samples 0-239) */
 //    	memcpy(arrADC1_DMA_copy, arrADC1_DMA, sizeof(arrADC1_DMA)); // for breakpoint
         extract_envelope_from_samples(arrADC1_DMA, 0);
@@ -502,7 +548,6 @@ void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc)
         hid_process_afterglow();
         hid_send_buffered_reports();
 
-        HAL_GPIO_WritePin(XGOOD_GPIO_Port, XGOOD_Pin, 0);
     }
 }
 
@@ -510,7 +555,8 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
     if (hadc->Instance == ADC1)
     {
-    	HAL_GPIO_WritePin(XGOOD_GPIO_Port, XGOOD_Pin, 1);
+    	if(!sensor_config_load_failed())
+    		HAL_GPIO_WritePin(XGOOD_GPIO_Port, XGOOD_Pin, 1);
         /* Process second half of DMA buffer (samples 240-479) */
 //    	memcpy(arrADC1_DMA_copy, arrADC1_DMA, sizeof(arrADC1_DMA)); // for breakpoint
         extract_envelope_from_samples(arrADC1_DMA, 240);
@@ -530,7 +576,8 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
         hid_send_buffered_reports();
 
         /* Debug: toggle GPIO or similar */
-        HAL_GPIO_WritePin(XGOOD_GPIO_Port, XGOOD_Pin, 0);
+        if(!sensor_config_load_failed())
+        	HAL_GPIO_WritePin(XGOOD_GPIO_Port, XGOOD_Pin, 0);
     }
 }
 

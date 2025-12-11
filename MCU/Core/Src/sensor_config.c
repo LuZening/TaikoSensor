@@ -19,12 +19,16 @@ extern TriggerFSM_t g_trigger_fsm;
 
 
 /* Global configuration instance with defaults */
-const uint16_t SENSOR_MULTIPLIERS_DEFAULT[5] = {8, 12, 12, 8, 8};
+/* Values are fixed-point *100 (e.g., 80 = 0.80, 120 = 1.20) */
+const uint16_t SENSOR_MULTIPLIERS_DEFAULT[5] = {80, 120, 120, 80, 80};
 SensorConfig_t g_sensor_config = {0};
 
 /* Terminal mode state */
 static bool g_terminal_mode_active = false;
 static uint8_t g_uart_rx_buffer[1];  // Single byte receive buffer
+
+/* Status flags */
+static bool g_config_load_failed = false;  // Set to true if flash load fails
 
 /* Private function prototypes */
 static void uart_start_receive(void);
@@ -41,8 +45,11 @@ void sensor_config_init(void)
 {
     /* Try to load configuration from flash */
     if (!sensor_config_load_from_flash()) {
-        /* Load failed - use defaults */
+        /* Load failed - use defaults and set failure flag */
+        g_config_load_failed = true;
         sensor_config_set_defaults();
+    } else {
+        g_config_load_failed = false;
     }
 
     /* Apply loaded configuration to runtime variables */
@@ -66,9 +73,9 @@ void sensor_config_set_defaults(void)
     g_sensor_config.magic = FLASH_CONFIG_MAGIC;
     g_sensor_config.version = 2;  // Increment version for new structure
 
-    /* Set default multipliers to 1.0 (no pre-amplification), stored as 10 (1.0 * 10) */
+    /* Set default multipliers to fixed-point *100 (e.g., 100 = 1.00) */
     for (int i = 0; i < 5; i++) {
-        g_sensor_config.sensor_multiplier[i] = SENSOR_MULTIPLIERS_DEFAULT[i];  // 10 = 1.0 in fixed-point (*10)
+        g_sensor_config.sensor_multiplier[i] = SENSOR_MULTIPLIERS_DEFAULT[i];
     }
 
     /* Set default thresholds */
@@ -90,11 +97,14 @@ void sensor_config_set_defaults(void)
 /* Helper function to convert fixed-point *10 value to display string */
 void fixed_point_to_string(char *buffer, uint16_t fixed_value)
 {
-    uint16_t integer_part = fixed_value / 10;
-    uint16_t decimal_part = fixed_value % 10;
+    uint16_t integer_part = fixed_value / 100;
+    uint16_t decimal_part = fixed_value % 100;
 
     if (decimal_part == 0) {
         snprintf(buffer, 16, "%u", integer_part);
+    } else if (decimal_part < 10) {
+        /* Add leading zero for values like 1.05 */
+        snprintf(buffer, 16, "%u.0%u", integer_part, decimal_part);
     } else {
         snprintf(buffer, 16, "%u.%u", integer_part, decimal_part);
     }
@@ -305,11 +315,11 @@ void sensor_config_process_command(const char *cmd_buffer, uint16_t length)
         sensor_config_send_string("  <command>           Execute action\r\n\r\n");
         sensor_config_send_string("=============== SET COMMANDS ===============\r\n");
         sensor_config_send_string("Per-Sensor Settings (X = 0-4):\r\n");
-        sensor_config_send_string("  multX=VAL    Sensor X multiplier (0.1-4096.0)  [eg: mult0=0.8]\r\n");
-        sensor_config_send_string("  thX=VAL      Sensor X threshold (0-65535)    [eg: th0=150]\r\n");
+        sensor_config_send_string("  multX=VAL    Sensor X multiplier (0.00-4096.00)  [eg: mult0=0.80]\r\n");
+        sensor_config_send_string("  thX=VAL      Sensor X threshold (0-65535)        [eg: th0=150]\r\n");
         sensor_config_send_string("\r\n");
         sensor_config_send_string("Global Trigger Settings:\r\n");
-        sensor_config_send_string("  base_th=VAL  Base trigger threshold (0-65535)  [eg: base_th=150]\r\n");
+        sensor_config_send_string("  base_th=VAL  Base trigger threshold (0-65535)    [eg: base_th=150]\r\n");
         sensor_config_send_string("\r\n");
         sensor_config_send_string("Timing Parameters (1-100 ms):\r\n");
         sensor_config_send_string("  tour_dur=VAL Tournament duration  [eg: tour_dur=4]\r\n");
@@ -317,8 +327,8 @@ void sensor_config_process_command(const char *cmd_buffer, uint16_t length)
         sensor_config_send_string("  key_dur=VAL  Key press duration   [eg: key_dur=20]\r\n");
         sensor_config_send_string("\r\n");
         sensor_config_send_string("Threshold Dynamics:\r\n");
-        sensor_config_send_string("  th_boost=VAL Threshold boost (0.1-10.0)  [eg: th_boost=1.5]\r\n");
-        sensor_config_send_string("  th_decay=VAL Threshold decay (0.0-1.0)  [eg: th_decay=0.97]\r\n");
+        sensor_config_send_string("  th_boost=VAL Threshold boost (0.00-10.00)  [eg: th_boost=1.50]\r\n");
+        sensor_config_send_string("  th_decay=VAL Threshold decay (0.00-1.00)  [eg: th_decay=0.97]\r\n");
         sensor_config_send_string("\r\n");
         sensor_config_send_string("============ QUERY COMMANDS =============\r\n");
         sensor_config_send_string("Use ? to view any value (e.g., th0?, base_th?)\r\n\r\n");
@@ -330,10 +340,10 @@ void sensor_config_process_command(const char *cmd_buffer, uint16_t length)
         sensor_config_send_string("\r\n");
         sensor_config_send_string("============ USAGE EXAMPLES ============\r\n");
         sensor_config_send_string("  SETTINGS:\r\n");
-        sensor_config_send_string("    mult0=1.5      Set sensor 0 to 1.5x multiplier\r\n");
+        sensor_config_send_string("    mult0=1.50     Set sensor 0 to 1.50x multiplier\r\n");
         sensor_config_send_string("    th0=500        Set sensor 0 threshold to 500\r\n");
         sensor_config_send_string("    base_th=200    Set base threshold to 200\r\n");
-        sensor_config_send_string("    th_boost=2.0   Set threshold boost to 2.0\r\n");
+        sensor_config_send_string("    th_boost=2.00  Set threshold boost to 2.00\r\n");
         sensor_config_send_string("    tour_dur=10    Set tournament duration to 10ms\r\n");
         sensor_config_send_string("\r\n");
         sensor_config_send_string("  QUERIES:\r\n");
@@ -585,7 +595,7 @@ static bool parse_simple_float(const char *str, float *result)
     int32_t integer_part = 0;
     int32_t decimal_part = 0;
     bool after_decimal = false;
-    bool has_decimal = false;
+    int decimal_digits = 0;
     int digit_count = 0;
 
     /* Skip leading spaces */
@@ -597,11 +607,12 @@ static bool parse_simple_float(const char *str, float *result)
     while (*str != '\0' && digit_count < 10) {
         if (*str >= '0' && *str <= '9') {
             if (after_decimal) {
-                /* Only take first decimal digit */
-                if (!has_decimal) {
-                    decimal_part = *str - '0';
-                    has_decimal = true;
+                /* Take up to 2 decimal digits */
+                if (decimal_digits < 2) {
+                    decimal_part = decimal_part * 10 + (*str - '0');
+                    decimal_digits++;
                 }
+                /* Ignore additional decimal digits beyond 2 */
             } else {
                 integer_part = integer_part * 10 + (*str - '0');
             }
@@ -618,24 +629,32 @@ static bool parse_simple_float(const char *str, float *result)
         str++;
     }
 
-    /* Check range (0.0 to 99.9) */
+    /* Check range (0.0 to 99.99) */
     if (integer_part > 99) {
         return false;
     }
 
-    /* Combine into float */
-    *result = (float)integer_part + ((float)decimal_part / 10.0f);
+    /* Scale decimal part to 2 digits (hundredths) */
+    if (decimal_digits == 0) {
+        decimal_part = 0;
+    } else if (decimal_digits == 1) {
+        decimal_part = decimal_part * 10;  /* 0.1 becomes 0.10 */
+    }
+
+    /* Combine into float (divide by 100 for 2 decimal places) */
+    *result = (float)integer_part + ((float)decimal_part / 100.0f);
 
     return true;
 }
 
 static bool parse_fixed_point(const char *str, uint16_t *value)
 {
-    /* Parse number with 1 decimal place max, return as fixed-point *10 */
+    /* Parse number with 2 decimal places max, return as fixed-point *100 */
     int32_t integer_part = 0;
     int32_t decimal_part = 0;
     bool negative = false;
     bool after_decimal = false;
+    int decimal_digits = 0;
 
     /* Skip leading spaces */
     while (*str == ' ' || *str == '\t') {
@@ -654,7 +673,11 @@ static bool parse_fixed_point(const char *str, uint16_t *value)
     while (*str != '\0') {
         if (*str >= '0' && *str <= '9') {
             if (after_decimal) {
-                decimal_part = decimal_part * 10 + (*str - '0');
+                if (decimal_digits < 2) {
+                    decimal_part = decimal_part * 10 + (*str - '0');
+                    decimal_digits++;
+                }
+                /* Ignore additional decimal digits beyond 2 */
             } else {
                 integer_part = integer_part * 10 + (*str - '0');
             }
@@ -667,21 +690,25 @@ static bool parse_fixed_point(const char *str, uint16_t *value)
         str++;
     }
 
-    /* Calculate fixed-point value (multiply by 10) */
-    int32_t result = integer_part * 10 + decimal_part;
-
-    /* Clamp decimal part to 1 digit (tenths) */
-    if (decimal_part >= 10) {
-        decimal_part = 9;
-        result = integer_part * 10 + decimal_part;
+    /* Scale decimal part to 2 digits (hundredths) */
+    if (decimal_digits == 0) {
+        decimal_part = 0;
+    } else if (decimal_digits == 1) {
+        decimal_part = decimal_part * 10;  /* 0.1 becomes 0.10 */
+    } else if (decimal_digits > 2) {
+        /* Clamp to 2 digits maximum */
+        decimal_part = 99;
     }
+
+    /* Calculate fixed-point value (multiply by 100) */
+    int32_t result = integer_part * 100 + decimal_part;
 
     if (negative) {
         result = -result;
     }
 
-    /* Check range (allow up to 4096.0 = 40960 in fixed-point) */
-    if (result < 0 || result > 40960) {
+    /* Check range (allow up to 4096.00 = 409600 in fixed-point) */
+    if (result < 0 || result > 409600) {
         return false;
     }
 
@@ -734,21 +761,28 @@ void sensor_config_send_float(const char *prefix, float value)
     char buffer[32];
     int len;
 
-    /* Format float with 1 decimal place max */
+    /* Format float with 2 decimal places */
     int32_t int_part = (int32_t)value;
     float frac = value - (float)int_part;
 
-    if (frac < 0.01f) {
-        /* No decimal part */
+    if (frac < 0.005f) {
+        /* No decimal part (or very small) */
         len = snprintf(buffer, sizeof(buffer), "%s=%ld\r\n", prefix, (long)int_part);
     } else {
-        /* One decimal place */
-        int32_t frac_part = (int32_t)(frac * 10.0f + 0.5f);  // Round to 1 digit
-        if (frac_part >= 10) {
-            frac_part = 9;  // Clamp to single digit
+        /* Two decimal places */
+        int32_t frac_part = (int32_t)(frac * 100.0f + 0.5f);  // Round to 2 digits
+        if (frac_part >= 100) {
+            frac_part = 99;  // Clamp to 2 digits max
         }
-        len = snprintf(buffer, sizeof(buffer), "%s=%ld.%ld\r\n", prefix,
-                       (long)int_part, (long)frac_part);
+
+        if (frac_part < 10) {
+            /* Add leading zero (e.g., 1.05) */
+            len = snprintf(buffer, sizeof(buffer), "%s=%ld.0%ld\r\n", prefix,
+                           (long)int_part, (long)frac_part);
+        } else {
+            len = snprintf(buffer, sizeof(buffer), "%s=%ld.%ld\r\n", prefix,
+                           (long)int_part, (long)frac_part);
+        }
     }
 
     uart_terminal_send((const uint8_t *)buffer, len);
@@ -773,4 +807,9 @@ bool sensor_config_save_pending(void)
     /* Save to flash is manually triggered by "save" command,
      * not automatic, so always return false here. */
     return false;
+}
+
+bool sensor_config_load_failed(void)
+{
+    return g_config_load_failed;
 }

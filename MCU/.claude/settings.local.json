@@ -10,7 +10,9 @@
       "Bash(arm-none-eabi-gcc:*)",
       "Bash(grep:*)",
       "Bash(certutil -hashfile uart_terminal.c MD5)",
-      "Bash(dir \".claude\" /B)"
+      "Bash(dir \".claude\" /B)",
+      "Bash(gcc:*)",
+      "Bash(test_fixed_point:*)"
     ],
     "deny": [],
     "ask": []

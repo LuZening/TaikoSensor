@@ -39,7 +39,7 @@ Core/Src/piezosensor.o: ../Core/Src/piezosensor.c \
  ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_core.h \
  ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h \
  ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ctlreq.h \
- ../Core/Inc/sensor_config.h
+ ../Core/Inc/uart_terminal.h ../Core/Inc/sensor_config.h
 
 ../Core/Inc/piezosensor.h:
 
@@ -128,5 +128,7 @@ Core/Src/piezosensor.o: ../Core/Src/piezosensor.c \
 ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h:
 
 ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ctlreq.h:
+
+../Core/Inc/uart_terminal.h:
 
 ../Core/Inc/sensor_config.h:
