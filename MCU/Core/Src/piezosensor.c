@@ -9,8 +9,13 @@
 #include "stm32f1xx_hal.h"
 #include "usbd_hid.h"
 #include <string.h>
+#include <stdbool.h>
 #include <stdio.h>
+#include "drumcontroller.h"
+#include "usbd_composite_desc.h"
 #include "uart_terminal.h"
+#include "usbd_composite_wrapper.h"
+#include "usbd_drumcontroller_wrapper.h"
 
 /* Forward declarations of static functions */
 static void ring_buffer_add(PiezoSensor_t *sensor, uint16_t value);
@@ -31,13 +36,14 @@ extern USBD_HandleTypeDef hUsbDeviceFS;
 extern UART_HandleTypeDef huart3;  // For debug output
 
 /* Global system time */
-uint32_t g_system_ms = 0;
+volatile uint32_t g_system_ms = 0;
 
 /* HID report buffer */
-uint8_t g_hid_report[8] = {0};
+volatile uint8_t g_hid_report[8] = {0};
+volatile USB_JoystickReport_Input_t joystick_report = {.Button = 0, .Hat = JOYSTICK_HAT_NEUTRAL, .LX = JOYSTICK_ANALOG_NEUTRAL, .LY = JOYSTICK_ANALOG_NEUTRAL, .RX = JOYSTICK_ANALOG_NEUTRAL, .RY = JOYSTICK_ANALOG_NEUTRAL, .VendorSpec = 0};
 
 /* Debug state for max value tracking */
-DebugState_t g_debug_state = {0};
+volatile DebugState_t g_debug_state = {0};
 
 /*================= RING BUFFER FUNCTIONS =================*/
 
@@ -139,7 +145,7 @@ void piezosensor_init(void)
         g_sensors[i].rms_sample_count = 0;
         g_sensors[i].rms_value = 0;             // 0 in fixed-point (*10)
         g_sensors[i].threshold_multiplier = 1.0f; // 1.0 in float
-        g_sensors[i].adjusted_threshold = TRIGGER_THRESHOLD_BASE;
+        g_sensors[i].adjusted_threshold = g_sensor_config.trigger_threshold_base;
         g_sensors[i].last_trigger_ms = 0;
         g_sensors[i].ma_hit_time_ms = 0;
 
@@ -148,7 +154,10 @@ void piezosensor_init(void)
         else if (i == 1) g_sensors[i].hid_keycode = SENSOR_1_KEYCODE;
         else if (i == 2) g_sensors[i].hid_keycode = SENSOR_2_KEYCODE;
         else if (i == 3) g_sensors[i].hid_keycode = SENSOR_3_KEYCODE;
-
+        if (i == 0) g_sensors[i].drumcontroller_keycode = SENSOR_0_DRUMCONTROLLER_KEYCODE;
+        else if (i == 1) g_sensors[i].drumcontroller_keycode = SENSOR_1_DRUMCONTROLLER_KEYCODE;
+        else if (i == 2) g_sensors[i].drumcontroller_keycode = SENSOR_2_DRUMCONTROLLER_KEYCODE;
+        else if (i == 3) g_sensors[i].drumcontroller_keycode = SENSOR_3_DRUMCONTROLLER_KEYCODE;
         /* Set LED pins */
         if (i == 0) {
             g_sensors[i].led_pin = LED_SENSOR_0;
@@ -191,7 +200,7 @@ void piezosensor_init(void)
 
 /*================= ENVELOPE EXTRACTION =================*/
 
-void extract_envelope_from_samples(uint16_t *samples, uint16_t sample_offset)
+void extract_envelope_from_samples(volatile uint16_t *samples, uint16_t sample_offset)
 {
     /* Process each sensor channel */
     for (int sensor = 0; sensor < SENSOR_TOTAL_CHANNELS; sensor++) {
@@ -314,7 +323,7 @@ void cooldown_fsm_process(void)
                             /* Reset threshold multiplier to 1.0 */
                             sensor->threshold_multiplier = 1.0f;
                             /* Reset adjusted_threshold */
-                            sensor->adjusted_threshold = TRIGGER_THRESHOLD_BASE;
+                            sensor->adjusted_threshold = g_sensor_config.trigger_threshold_base;
 
                             /* Reset MA hit timestamp */
                             sensor->ma_hit_time_ms = 0;
@@ -378,7 +387,7 @@ static void wait_for_trigger_state(void)
         // the trigger sensor's value cannot be less than 75% of the max value among all sensors
         if ((latest_envelope > g_sensors[i].adjusted_threshold) && (latest_envelope > ((max_envelope * 7) >> 3) )) {
         	/* give some bounus in tournament for the first trigger */
-        	g_sensors[i].tournament_bonus_multiplier = TOURNAMENT_BONUS_MULTIPLIER_DEFAULT;
+        	g_sensors[i].tournament_bonus_multiplier = (uint32_t)(g_sensor_config.threshold_multiplier_boost * 10);
             /* Trigger detected! Start tournament */
             g_trigger_fsm.state = TRIGGER_STATE_TOURNAMENT;
             g_trigger_fsm.tournament_start_ms = g_system_ms;
@@ -550,7 +559,9 @@ static void final_state(void)
 void hid_clear_report(void)
 {
     /* Clear all key slots in HID report (keep modifiers at 0) */
-    memset(g_hid_report, 0, 8);
+    for (int i = 0; i < 8; i++) {
+        g_hid_report[i] = 0;
+    }
 }
 
 /*================= KEY SCHEDULING & BUFFERING =================*/
@@ -581,34 +592,76 @@ void schedule_key_press(uint8_t sensor_id)
  */
 uint8_t hid_send_buffered_reports(void)
 {
-    uint8_t num_keys = 0;
+    /* Check USB device mode and handle accordingly */
 
-    /* Clear report buffer */
-    hid_clear_report();
-
-    /* Add all active keys to report */
-    for (int i = 0; i < SENSORS_ACTIVE; i++) {
-        if (g_sensors[i].key_pressed) {
-            /* Find next empty slot (start at index 2, after modifier/reserved bytes) */
-            for (int slot = 2; slot < 8; slot++) {
-                if (g_hid_report[slot] == 0) {
-                    g_hid_report[slot] = g_sensors[i].hid_keycode;
-                    num_keys++;
-                    break;
-                }
+    if (g_USB_device_type == DEVICE_TYPE_DRUMCONTROLLER)
+    {
+        /* Add all active buttons to the joystick report */
+        for (int i = 0; i < SENSORS_ACTIVE; i++)
+        {
+            if (g_sensors[i].key_pressed)
+            {
+				/* Use bitwise OR to combine all active drum controller button codes */
+            	if((joystick_report.Button & g_sensors[i].drumcontroller_keycode) == 0)
+            	{
+					joystick_report.Button |= g_sensors[i].drumcontroller_keycode;
+					g_HID_report_modified = 1;
+            	}
             }
-            /* Stop if all 6 key slots filled */
-            if (num_keys >= 6) break;
+        }
+		/* Send joystick report */
+        if(g_HID_report_modified)
+        {
+			USBD_DrumController_SendReport(&hUsbDeviceFS, (uint8_t*)&joystick_report, sizeof(USB_JoystickReport_Input_t));
+			g_HID_report_modified = 0;
         }
     }
-
-    /* Send report if any keys active */
-//    if (num_keys > 0)
+    else
     {
-    	USBD_HID_SendReport(&hUsbDeviceFS, g_hid_report, 8);
+        /* Keyboard Mode - Build HID Keyboard Report */
+        uint8_t num_keys = 0;
+        /* Add all active keys to report */
+        for (int i = 0; i < SENSORS_ACTIVE; i++) {
+            if (g_sensors[i].key_pressed) {
+                /* Check if this keycode is already in the report to avoid duplicates */
+                bool keycode_exists = false;
+                for (int slot = 2; slot < 8; slot++) {
+                    if (g_hid_report[slot] == g_sensors[i].hid_keycode) {
+                        keycode_exists = true;
+                        break;
+                    }
+                }
+
+                /* Only add the keycode if it's not already in the report */
+                if (!keycode_exists) {
+                    /* Find next empty slot (start at index 2, after modifier/reserved bytes) */
+                    for (int slot = 2; slot < 8; slot++) {
+                        if (g_hid_report[slot] == 0) {
+                            g_hid_report[slot] = g_sensors[i].hid_keycode;
+                            num_keys++;
+                            g_HID_report_modified = 1;
+                            break;
+                        }
+                    }
+                    /* Stop if all 6 key slots filled */
+                    if (num_keys >= 6) break;
+                }
+            }
+        }
+
+        /* Send keyboard report, only transmit changes */
+        if(g_HID_report_modified)
+        {
+        	USBD_HID_SendReport(&hUsbDeviceFS, g_hid_report, 8);
+        	g_HID_report_modified = 0;
+        }
+
+        /* For keyboard mode, return number of keys added to report */
+        return num_keys;
     }
 
-    return num_keys;
+    /* Default return for the drum controller case */
+    return 0;
 }
 
 /**
@@ -630,11 +683,23 @@ void hid_process_afterglow(void)
                 g_sensors[i].key_release_scheduled_time_ms = 0;
 
                 /* Remove from HID report (will be rebuilt next cycle) */
-                for (int slot = 2; slot < 8; slot++) {
-                    if (g_hid_report[slot] == g_sensors[i].hid_keycode) {
-                        g_hid_report[slot] = 0;
-                        break;
-                    }
+                if(g_USB_device_type == DEVICE_TYPE_KEYBOARD_CDC_COMPOSITE)
+                {
+					for (int slot = 2; slot < 8; slot++) {
+						if (g_hid_report[slot] == g_sensors[i].hid_keycode) {
+							g_hid_report[slot] = 0;
+							g_HID_report_modified = 1; // to notify HID report transmission
+							break;
+						}
+					}
+                }
+                else if(g_USB_device_type == DEVICE_TYPE_DRUMCONTROLLER)
+                {
+                	if((joystick_report.Button & g_sensors[i].drumcontroller_keycode) != 0)
+                	{
+                		joystick_report.Button &= (~g_sensors[i].drumcontroller_keycode);
+                		g_HID_report_modified = 1;// to notify HID report transmission
+                	}
                 }
             }
         }
@@ -743,7 +808,10 @@ void debug_print_trigger(uint8_t sensor_id, uint32_t rms_value)
  */
 void debug_init(void)
 {
-    memset(&g_debug_state, 0, sizeof(g_debug_state));
+    // Manually clear the volatile debug state
+    for (int i = 0; i < 5; i++) {
+        g_debug_state.max_values[i] = 0;
+    }
     g_debug_state.last_output_ms = 0;
 }
 
@@ -790,7 +858,9 @@ void debug_output_if_needed(uint32_t current_ms)
         uart_terminal_send((uint8_t *)buffer, len);
 
         /* Reset max values for next period */
-        memset(g_debug_state.max_values, 0, sizeof(g_debug_state.max_values));
+        for (int i = 0; i < 5; i++) {
+            g_debug_state.max_values[i] = 0;
+        }
 
         /* Update last output time */
         g_debug_state.last_output_ms = current_ms;

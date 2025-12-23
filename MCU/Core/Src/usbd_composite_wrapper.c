@@ -19,9 +19,11 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_composite_wrapper.h"
+#include "usbd_drumcontroller_wrapper.h"
 #include "usbd_cdc.h"
 #include "usbd_hid.h"
 #include "usbd_composite_desc.h"
+
 #include "usb_cdc_wrapper.h"
 #include "usbd_cdc_if.h"
 
@@ -35,7 +37,7 @@
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-
+volatile uint8_t g_HID_report_modified = 0;
 /* USER CODE END PV */
 
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
@@ -182,26 +184,27 @@ static uint8_t USBD_Composite_Init(USBD_HandleTypeDef *pdev, uint8_t cfgidx)
     pdev->pClassData = NULL;
     return USBD_FAIL;
   }
-
-  pdev->pClassData = (void *)&hcomp->hcdc;
-  pdev->pCDC = (void *)&hcomp->hcdc;
-  pdev->pUserData = &USBD_CDC_Interface_fops_FS;
-
-  /* Initialize CDC class */
-  hcomp->CDC_ClassId = 0;
-  res = USBD_CDC.Init(pdev, cfgidx);
-  if(res != USBD_OK)
+  /** TYPE 0: DEVICE_TYPE_KEYBOARD_CDC_COMPOSITE**/
+  if(g_USB_device_type == DEVICE_TYPE_KEYBOARD_CDC_COMPOSITE)
   {
-    return res;
+	  /* Initialize HID class */
+	  hcomp->HID_ClassId = 0;
+	  pdev->pClassData = (void *)&hcomp->hhid;
+	  pdev->pHID = (void *)&hcomp->hhid;
+	  pdev->pUserData = NULL;
+	  res = USBD_HID.Init(pdev, cfgidx);
+
+	  /* Initialize CDC class */
+	  pdev->pClassData = (void *)&hcomp->hcdc;
+	  pdev->pCDC = (void *)&hcomp->hcdc;
+	  pdev->pUserData = &USBD_CDC_Interface_fops_FS;
+	  hcomp->CDC_ClassId = 1;
+	  res = USBD_CDC.Init(pdev, cfgidx);
+	  if(res != USBD_OK)
+	  {
+		return res;
+	  }
   }
-
-  /* Initialize HID class */
-  hcomp->HID_ClassId = 1;
-  pdev->pClassData = (void *)&hcomp->hhid;
-  pdev->pHID = (void *)&hcomp->hhid;
-  pdev->pUserData = NULL;
-  res = USBD_HID.Init(pdev, cfgidx);
-
   /* Restore composite handle */
   pdev->pClassData = (void *)hcomp;
 
@@ -222,17 +225,22 @@ static uint8_t USBD_Composite_DeInit(USBD_HandleTypeDef *pdev, uint8_t cfgidx)
 
   if(hcomp != NULL)
   {
-    /* DeInitialize CDC */
-    pdev->pClassData = (void *)&hcomp->hcdc;
-    USBD_CDC.DeInit(pdev, cfgidx);
+	  /** TYPE 0: DEVICE_TYPE_KEYBOARD_CDC_COMPOSITE**/
+	  if(g_USB_device_type == DEVICE_TYPE_KEYBOARD_CDC_COMPOSITE)
+	  {
+		/* DeInitialize CDC */
+		pdev->pClassData = (void *)&hcomp->hcdc;
+		USBD_CDC.DeInit(pdev, cfgidx);
 
-    /* DeInitialize HID */
-    pdev->pClassData = (void *)&hcomp->hhid;
-    USBD_HID.DeInit(pdev, cfgidx);
+		/* DeInitialize HID */
+		pdev->pClassData = (void *)&hcomp->hhid;
+		USBD_HID.DeInit(pdev, cfgidx);
 
-    /* Free composite handle */
-    USBD_free((void *)hcomp);
-    pdev->pClassData = NULL;
+		/* Free composite handle */
+		USBD_free((void *)hcomp);
+		pdev->pClassData = NULL;
+	  }
+
   }
 
   return res;
@@ -262,8 +270,11 @@ static uint8_t USBD_Composite_Setup(USBD_HandleTypeDef *pdev, USBD_SetupReqTyped
   else if(interface == COMPOSITE_HID_INTERFACE)
   {
     /* Route to HID */
-    pdev->pClassData = (void *)&hcomp->hhid;
-    result = USBD_HID.Setup(pdev, req);
+	  if(g_USB_device_type == DEVICE_TYPE_KEYBOARD_CDC_COMPOSITE)
+	  {
+		pdev->pClassData = (void *)&hcomp->hhid;
+		result = USBD_HID.Setup(pdev, req);
+	  }
   }
   else
   {
@@ -289,13 +300,16 @@ static uint8_t USBD_Composite_EP0_TxSent(USBD_HandleTypeDef *pdev)
 
   /* Both CDC and HID may need EP0 TxSent */
   /* For safety, call both (they check their own states) */
-  pdev->pClassData = (void *)&hcomp->hcdc;
-  if(USBD_CDC.EP0_TxSent)
-	  USBD_CDC.EP0_TxSent(pdev);
+  if(g_USB_device_type == DEVICE_TYPE_KEYBOARD_CDC_COMPOSITE)
+  {
+	  pdev->pClassData = (void *)&hcomp->hcdc;
+	  if(USBD_CDC.EP0_TxSent)
+		  USBD_CDC.EP0_TxSent(pdev);
+	  pdev->pClassData = (void *)&hcomp->hhid;
+	  if(USBD_HID.EP0_TxSent)
+		  USBD_HID.EP0_TxSent(pdev);
+  }
 
-  pdev->pClassData = (void *)&hcomp->hhid;
-  if(USBD_HID.EP0_TxSent)
-	  USBD_HID.EP0_TxSent(pdev);
 
   pdev->pClassData = (void *)hcomp;
 
@@ -312,10 +326,19 @@ static uint8_t USBD_Composite_EP0_RxReady(USBD_HandleTypeDef *pdev)
 {
   USBD_Composite_HandleTypeDef *hcomp = (USBD_Composite_HandleTypeDef *)pdev->pClassData;
 
-  /* Route to CDC for line coding requests */
-  pdev->pClassData = (void *)&hcomp->hcdc;
-  pdev->pUserData = &USBD_CDC_Interface_fops_FS;
-  USBD_CDC.EP0_RxReady(pdev);
+  if(g_USB_device_type == DEVICE_TYPE_KEYBOARD_CDC_COMPOSITE)
+  {
+	  /* Route to CDC for line coding requests */
+	  pdev->pClassData = (void *)&hcomp->hcdc;
+	  pdev->pUserData = &USBD_CDC_Interface_fops_FS;
+	  USBD_CDC.EP0_RxReady(pdev);
+
+	  pdev->pClassData = (void *)&hcomp->hhid;
+	  pdev->pUserData = NULL;
+	  if(USBD_HID.EP0_RxReady)
+		  USBD_CDC.EP0_RxReady(pdev);
+  }
+
 
   pdev->pClassData = (void *)hcomp;
 
@@ -343,9 +366,13 @@ static uint8_t USBD_Composite_DataIn(USBD_HandleTypeDef *pdev, uint8_t epnum)
   }
   else if(epnum == (HID_IN_EP & 0x7F))
   {
-    /* HID endpoint */
-    pdev->pClassData = (void *)&hcomp->hhid;
-    result = USBD_HID.DataIn(pdev, epnum);
+    if(g_USB_device_type == DEVICE_TYPE_KEYBOARD_CDC_COMPOSITE)
+    {
+		/* HID endpoint */
+		pdev->pClassData = (void *)&hcomp->hhid;
+		result = USBD_HID.DataIn(pdev, epnum);
+    }
+
   }
 
   pdev->pClassData = (void *)hcomp;
@@ -374,10 +401,14 @@ static uint8_t USBD_Composite_DataOut(USBD_HandleTypeDef *pdev, uint8_t epnum)
   }
   else if(epnum == (HID_IN_EP & 0x7F))
   {
-    /* HID OUT endpoint (if used) */
-    pdev->pClassData = (void *)&hcomp->hhid;
-    if(USBD_HID.DataOut)
-    	result = USBD_HID.DataOut(pdev, epnum);
+    if(g_USB_device_type == DEVICE_TYPE_KEYBOARD_CDC_COMPOSITE)
+    {
+		/* HID OUT endpoint (if used) */
+		pdev->pClassData = (void *)&hcomp->hhid;
+		if(USBD_HID.DataOut)
+			result = USBD_HID.DataOut(pdev, epnum);
+    }
+
   }
 
   pdev->pClassData = (void *)hcomp;
@@ -396,10 +427,14 @@ static uint8_t USBD_Composite_SOF(USBD_HandleTypeDef *pdev)
   USBD_Composite_HandleTypeDef *hcomp = (USBD_Composite_HandleTypeDef *)pdev->pClassData;
   uint8_t result = USBD_OK;
 
-  /* Call HID SOF (CDC doesn't use SOF) */
-  pdev->pClassData = (void *)&hcomp->hhid;
-  if(USBD_HID.SOF)
-	  result = USBD_HID.SOF(pdev);
+  if(g_USB_device_type == DEVICE_TYPE_KEYBOARD_CDC_COMPOSITE)
+  {
+	  /* Call HID SOF (CDC doesn't use SOF) */
+	  pdev->pClassData = (void *)&hcomp->hhid;
+	  if(USBD_HID.SOF)
+		  result = USBD_HID.SOF(pdev);
+  }
+
 
   pdev->pClassData = (void *)hcomp;
 
@@ -415,7 +450,7 @@ static uint8_t USBD_Composite_SOF(USBD_HandleTypeDef *pdev)
 static uint8_t *USBD_Composite_GetFSConfigDescriptor(uint16_t *length)
 {
   *length = USB_COMPOSITE_CONFIG_DESC_SIZ;
-  return USBD_FS_CfgDesc;
+  return USBD_Composite_FS_CfgDesc;
 }
 
 /**
@@ -426,7 +461,8 @@ static uint8_t *USBD_Composite_GetFSConfigDescriptor(uint16_t *length)
   */
 static uint8_t *USBD_Composite_GetHSConfigDescriptor(uint16_t *length)
 {
-  return USBD_CDC.GetHSConfigDescriptor(length);
+	  *length = USB_COMPOSITE_CONFIG_DESC_SIZ;
+	  return USBD_Composite_FS_CfgDesc;
 }
 
 /**

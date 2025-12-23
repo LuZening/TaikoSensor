@@ -109,6 +109,7 @@ typedef struct {
 #define KEY_F12     0x45
 
 /* Currently pressed keys buffer (extern in piezosensor.c) */
-extern uint8_t g_hid_report[8];
+extern volatile uint8_t g_hid_report[8];
+
 
 #endif /* INC_KEYBOARD_H_ */

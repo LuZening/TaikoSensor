@@ -15,7 +15,7 @@ typedef struct {
 } DebugState_t;
 
 /* Global debug state (defined in piezosensor.c) */
-extern DebugState_t g_debug_state;
+extern volatile DebugState_t g_debug_state;
 
 /* Function prototypes */
 void debug_init(void);

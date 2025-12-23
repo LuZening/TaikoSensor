@@ -31,8 +31,8 @@ Core/Src/sensor_config.o: ../Core/Src/sensor_config.c \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_usb.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd_ex.h \
  ../Core/Inc/piezo_config.h ../Core/Inc/main.h ../Core/Inc/keyboard.h \
- ../Core/Inc/piezosensor.h ../Core/Inc/piezo_config.h \
- ../Core/Inc/debug_output.h ../Core/Inc/main.h \
+ ../Core/Inc/drumcontroller.h ../Core/Inc/piezosensor.h \
+ ../Core/Inc/piezo_config.h ../Core/Inc/debug_output.h ../Core/Inc/main.h \
  ../Core/Inc/uart_terminal.h
 
 ../Core/Inc/sensor_config.h:
@@ -102,6 +102,8 @@ Core/Src/sensor_config.o: ../Core/Src/sensor_config.c \
 ../Core/Inc/main.h:
 
 ../Core/Inc/keyboard.h:
+
+../Core/Inc/drumcontroller.h:
 
 ../Core/Inc/piezosensor.h:
 

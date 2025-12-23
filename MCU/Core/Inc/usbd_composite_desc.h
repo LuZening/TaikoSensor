@@ -56,7 +56,18 @@
 #define  USB_SIZ_STRING_SERIAL       0x1A
 
 /* USER CODE BEGIN EXPORTED_CONSTANTS */
+#define COMPOSITE_CDC_CONTROL_INTERFACE    1U
+#define COMPOSITE_CDC_DATA_INTERFACE       2U
+#define COMPOSITE_HID_INTERFACE            0U
 
+
+
+#define USBD_LANGID_STRING_DRUMCONTROLLER     1033
+#define USBD_MANUFACTURER_STRING_DRUMCONTROLLER     "5233 Lab"
+
+#define USBD_PRODUCT_STRING_FS_DRUMCONTROLLER     "Taiko Sensor"
+#define USBD_CONFIGURATION_STRING_FS_DRUMCONTROLLER     "HID Config"
+#define USBD_INTERFACE_STRING_FS_DRUMCONTROLLER     "HID Interface"
 /* USER CODE END EXPORTED_CONSTANTS */
 
 /**
@@ -76,6 +87,7 @@
 
 /* Descriptor sizes */
 #define USB_COMPOSITE_CONFIG_DESC_SIZ    108U
+
 
 /* CDC descriptor sizes (from CDC template) */
 #define USB_CDC_CONFIG_DESC_SIZ          67U
@@ -125,10 +137,12 @@
 extern USBD_DescriptorsTypeDef FS_Composite_Desc;
 
 /** Full Speed Configuration Descriptor */
-extern uint8_t USBD_FS_CfgDesc[USB_COMPOSITE_CONFIG_DESC_SIZ];
+extern uint8_t USBD_Composite_FS_CfgDesc[USB_COMPOSITE_CONFIG_DESC_SIZ];
 
 /* USER CODE BEGIN EXPORTED_VARIABLES */
-
+#define DEVICE_TYPE_KEYBOARD_CDC_COMPOSITE 0
+#define DEVICE_TYPE_DRUMCONTROLLER 1
+extern uint8_t g_USB_device_type;
 /* USER CODE END EXPORTED_VARIABLES */
 
 /**

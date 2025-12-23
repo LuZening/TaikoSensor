@@ -39,8 +39,10 @@ Core/Src/usbd_composite_wrapper.o: ../Core/Src/usbd_composite_wrapper.c \
  ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h \
  ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ctlreq.h \
  ../Middlewares/ST/STM32_USB_Device_Library/Class/HID/Inc/usbd_hid.h \
- ../Core/Inc/usbd_composite_desc.h ../Core/Inc/usbd_composite_desc.h \
- ../Core/Inc/usb_cdc_wrapper.h ../Core/Inc/usbd_cdc_if.h
+ ../Core/Inc/usbd_composite_desc.h \
+ ../Core/Inc/usbd_drumcontroller_wrapper.h \
+ ../Core/Inc/usbd_composite_desc.h ../Core/Inc/usb_cdc_wrapper.h \
+ ../Core/Inc/usbd_cdc_if.h
 
 ../Core/Inc/usbd_composite_wrapper.h:
 
@@ -125,6 +127,8 @@ Core/Src/usbd_composite_wrapper.o: ../Core/Src/usbd_composite_wrapper.c \
 ../Middlewares/ST/STM32_USB_Device_Library/Class/HID/Inc/usbd_hid.h:
 
 ../Core/Inc/usbd_composite_desc.h:
+
+../Core/Inc/usbd_drumcontroller_wrapper.h:
 
 ../Core/Inc/usbd_composite_desc.h:
 

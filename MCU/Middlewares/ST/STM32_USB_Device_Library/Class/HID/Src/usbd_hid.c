@@ -46,7 +46,7 @@ EndBSPDependencies */
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_hid.h"
 #include "usbd_ctlreq.h"
-
+#include "usbd_composite_wrapper.h"
 
 /** @addtogroup STM32_USB_DEVICE_LIBRARY
   * @{
@@ -315,7 +315,7 @@ __ALIGN_BEGIN static uint8_t USBD_HID_DeviceQualifierDesc[USB_LEN_DEV_QUALIFIER_
   0x00,
 };
 
-__ALIGN_BEGIN static uint8_t HID_MOUSE_ReportDesc[HID_KEYBOARD_REPORT_DESC_SIZE]  __ALIGN_END =
+__ALIGN_BEGIN static uint8_t HID_KEYBOARD_ReportDesc[HID_KEYBOARD_REPORT_DESC_SIZE]  __ALIGN_END =
 {
 		0x05, 0x01,        // Usage Page (Generic Desktop Ctrls)
 		0x09, 0x06,        // Usage (Keyboard)
@@ -471,7 +471,7 @@ static uint8_t  USBD_HID_Setup(USBD_HandleTypeDef *pdev,
           if (req->wValue >> 8 == HID_REPORT_DESC)
           {
             len = MIN(HID_KEYBOARD_REPORT_DESC_SIZE, req->wLength);
-            pbuf = HID_MOUSE_ReportDesc;
+            pbuf = HID_KEYBOARD_ReportDesc;
           }
           else if (req->wValue >> 8 == HID_DESCRIPTOR_TYPE)
           {

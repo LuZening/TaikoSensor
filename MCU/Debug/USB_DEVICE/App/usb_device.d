@@ -42,7 +42,8 @@ USB_DEVICE/App/usb_device.o: ../USB_DEVICE/App/usb_device.c \
  ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h \
  ../Core/Inc/usbd_composite_desc.h ../Core/Inc/usbd_composite_wrapper.h \
  ../USB_DEVICE/App/usbd_cdc.h ../Core/Inc/usbd_composite_desc.h \
- ../Core/Inc/usb_cdc_wrapper.h ../Core/Inc/usbd_cdc_if.h
+ ../Core/Inc/usbd_drumcontroller_wrapper.h ../Core/Inc/usb_cdc_wrapper.h \
+ ../Core/Inc/usbd_cdc_if.h
 
 ../USB_DEVICE/App/usb_device.h:
 
@@ -135,6 +136,8 @@ USB_DEVICE/App/usb_device.o: ../USB_DEVICE/App/usb_device.c \
 ../USB_DEVICE/App/usbd_cdc.h:
 
 ../Core/Inc/usbd_composite_desc.h:
+
+../Core/Inc/usbd_drumcontroller_wrapper.h:
 
 ../Core/Inc/usb_cdc_wrapper.h:
 

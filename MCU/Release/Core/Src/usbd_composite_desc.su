@@ -1,8 +1,8 @@
-usbd_composite_desc.c:356:11:USBD_FS_DeviceDescriptor	0	static
-usbd_composite_desc.c:369:11:USBD_FS_LangIDStrDescriptor	0	static
-usbd_composite_desc.c:505:13:IntTo_Unicode	16	static
-usbd_composite_desc.c:414:11:USBD_FS_SerialStrDescriptor	8	static
-usbd_composite_desc.c:401:11:USBD_FS_ManufacturerStrDescriptor	8	static
-usbd_composite_desc.c:382:11:USBD_FS_ProductStrDescriptor	8	static
-usbd_composite_desc.c:434:11:USBD_FS_ConfigStrDescriptor	8	static
-usbd_composite_desc.c:453:11:USBD_FS_InterfaceStrDescriptor	8	static
+usbd_composite_desc.c:364:11:USBD_FS_DeviceDescriptor	0	static
+usbd_composite_desc.c:377:11:USBD_FS_LangIDStrDescriptor	0	static
+usbd_composite_desc.c:513:13:IntTo_Unicode	16	static
+usbd_composite_desc.c:422:11:USBD_FS_SerialStrDescriptor	8	static
+usbd_composite_desc.c:409:11:USBD_FS_ManufacturerStrDescriptor	8	static
+usbd_composite_desc.c:390:11:USBD_FS_ProductStrDescriptor	8	static
+usbd_composite_desc.c:442:11:USBD_FS_ConfigStrDescriptor	8	static
+usbd_composite_desc.c:461:11:USBD_FS_InterfaceStrDescriptor	8	static

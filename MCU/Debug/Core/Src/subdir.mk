@@ -16,7 +16,8 @@ C_SRCS += \
 ../Core/Src/uart_terminal.c \
 ../Core/Src/usb_cdc_wrapper.c \
 ../Core/Src/usbd_composite_desc.c \
-../Core/Src/usbd_composite_wrapper.c 
+../Core/Src/usbd_composite_wrapper.c \
+../Core/Src/usbd_drumcontroller_wrapper.c 
 
 OBJS += \
 ./Core/Src/main.o \
@@ -30,7 +31,8 @@ OBJS += \
 ./Core/Src/uart_terminal.o \
 ./Core/Src/usb_cdc_wrapper.o \
 ./Core/Src/usbd_composite_desc.o \
-./Core/Src/usbd_composite_wrapper.o 
+./Core/Src/usbd_composite_wrapper.o \
+./Core/Src/usbd_drumcontroller_wrapper.o 
 
 C_DEPS += \
 ./Core/Src/main.d \
@@ -44,7 +46,8 @@ C_DEPS += \
 ./Core/Src/uart_terminal.d \
 ./Core/Src/usb_cdc_wrapper.d \
 ./Core/Src/usbd_composite_desc.d \
-./Core/Src/usbd_composite_wrapper.d 
+./Core/Src/usbd_composite_wrapper.d \
+./Core/Src/usbd_drumcontroller_wrapper.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include "main.h"
 #include "keyboard.h"
+#include "drumcontroller.h"
 /*====================== USER CONFIGURATION ======================*/
 
 /* Sampling Configuration */
@@ -22,9 +23,8 @@
 #define DMA_BUFFER_SAMPLES         (DMA_SAMPLES_PER_HALF * 2)         // Double buffer
 
 /* Trigger Configuration */
-#define TRIGGER_THRESHOLD_BASE  150     // Base trigger threshold (ADC counts), 200mV = 248 @ 3.3Vref
+#define TRIGGER_THRESHOLD_BASE  200     // Base trigger threshold (ADC counts), 200mV = 248 @ 3.3Vref
 #define TOURNAMENT_DURATION_MS  4       // Tournament duration in milliseconds
-#define TOURNAMENT_BONUS_MULTIPLIER_DEFAULT 20
 #define COOLING_DOWN_MS 15
 
 /* Bundle Configuration (sensors that can trigger together) */
@@ -37,13 +37,13 @@
 #define MOVING_AVG_WINDOW_MS    20     // Moving average window length (ms)
 
 /* HID Key Press Duration (afterglow) */
-#define KEY_PRESS_DURATION_MS   20       // Key press duration in milliseconds
+#define KEY_PRESS_DURATION_MS   50       // Key press duration in milliseconds
 
 /* Envelope Processing Options */
 #define ENABLE_1ST_ORDER_DIFFERENTIATION  0  // 1 = enable, 0 = disable
 
 /* Threshold Recovery Configuration */
-#define THRESHOLD_MULTIPLIER_BOOST	1.5f
+#define THRESHOLD_MULTIPLIER_BOOST	2.f
 #define THRESHOLD_DECAY_FACTOR_FLOAT   0.97f     // Decay factor per ms (0.995 = multiply by 0.995 each ms)
 
 /* Ring Buffer Configuration for Envelope History */
@@ -62,7 +62,11 @@
 #define SENSOR_3_KEYCODE        KEY_D    // Left Rim
 // Sensor 4 is redundant and does not trigger HID
 
-/* LED Mapping */
+#define SENSOR_0_DRUMCONTROLLER_KEYCODE	JOYSTICK_BUTTON_ZR // Right Rim
+#define SENSOR_1_DRUMCONTROLLER_KEYCODE	JOYSTICK_BUTTON_RCLICK // Right Center
+#define SENSOR_2_DRUMCONTROLLER_KEYCODE	JOYSTICK_BUTTON_LCLICK // Left Center
+#define SENSOR_3_DRUMCONTROLLER_KEYCODE	JOYSTICK_BUTTON_ZL // Left Rim
+
 #define LED_SENSOR_0            XLED1_Pin
 #define LED_SENSOR_1            XLED2_Pin
 #define LED_SENSOR_2            XLED3_Pin

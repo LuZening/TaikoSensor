@@ -28,6 +28,7 @@
 /* USER CODE BEGIN Includes */
 #include "usbd_composite_desc.h"
 #include "usbd_composite_wrapper.h"
+#include "usbd_drumcontroller_wrapper.h"
 #include "usb_cdc_wrapper.h"
 #include "usbd_cdc_if.h"
 /* USER CODE END Includes */
@@ -66,32 +67,49 @@ USBD_HandleTypeDef hUsbDeviceFS;
 void MX_USB_DEVICE_Init(void)
 {
   /* USER CODE BEGIN USB_DEVICE_Init_PreTreatment */
+	if(g_USB_device_type == DEVICE_TYPE_KEYBOARD_CDC_COMPOSITE)
+	{
+	  /* Init Device Library, add supported class and start the library. */
+	  if (USBD_Init(&hUsbDeviceFS, &FS_Composite_Desc, DEVICE_FS) != USBD_OK)
+	  {
+		Error_Handler();
+	  }
 
-  /* Init Device Library, add supported class and start the library. */
-  if (USBD_Init(&hUsbDeviceFS, &FS_Composite_Desc, DEVICE_FS) != USBD_OK)
-  {
-    Error_Handler();
-  }
-
-  /* USER CODE END USB_DEVICE_Init_PreTreatment */
+	  /* USER CODE END USB_DEVICE_Init_PreTreatment */
 
 
-  /* Register composite class (manages both CDC and HID) */
-  if (USBD_RegisterClass(&hUsbDeviceFS, &USBD_COMPOSITE) != USBD_OK)
-  {
-    Error_Handler();
-  }
+	  /* Register composite class (manages both CDC and HID) */
+	  if (USBD_RegisterClass(&hUsbDeviceFS, &USBD_COMPOSITE) != USBD_OK)
+	  {
+		Error_Handler();
+	  }
 
-  /* Register CDC Interface callback */
-  if (USBD_CDC_RegisterInterface(&hUsbDeviceFS, &USBD_CDC_Interface_fops_FS) != USBD_OK)
-  {
-    Error_Handler();
-  }
+	  /* Register CDC Interface callback */
+	  if (USBD_CDC_RegisterInterface(&hUsbDeviceFS, &USBD_CDC_Interface_fops_FS) != USBD_OK)
+	  {
+		Error_Handler();
+	  }
 
-  if (USBD_Start(&hUsbDeviceFS) != USBD_OK)
-  {
-    Error_Handler();
-  }
+	}
+	else if(g_USB_device_type == DEVICE_TYPE_DRUMCONTROLLER)
+	{
+		  /* Init Device Library, add supported class and start the library. */
+		  if (USBD_Init(&hUsbDeviceFS, &FS_DRUMCONTROLLER_Desc, DEVICE_FS) != USBD_OK)
+		  {
+			Error_Handler();
+		  }
+
+		  /* Register composite class (as a Joystick) */
+		  if (USBD_RegisterClass(&hUsbDeviceFS, &USBD_DRUMCONTROLLER) != USBD_OK)
+		  {
+			Error_Handler();
+		  }
+
+	}
+	if (USBD_Start(&hUsbDeviceFS) != USBD_OK)
+	{
+		Error_Handler();
+	}
 
   /* USER CODE BEGIN USB_DEVICE_Init_PostTreatment */
   /* CDC interface already initialized by USBD_CDC_RegisterInterface */

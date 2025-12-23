@@ -32,7 +32,7 @@ extern "C" {
 #include "usbd_composite_desc.h"
 
 /* USER CODE BEGIN INCLUDE */
-
+extern volatile uint8_t g_HID_report_modified; // to indicate if HID report has been modified before been transmitted (dirty data)
 /* USER CODE END INCLUDE */
 
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
@@ -50,10 +50,7 @@ extern "C" {
   * @{
   */
 
-/* Interface numbers in composite descriptor */
-#define COMPOSITE_CDC_CONTROL_INTERFACE    0U
-#define COMPOSITE_CDC_DATA_INTERFACE       1U
-#define COMPOSITE_HID_INTERFACE            2U
+
 
 /**
   * @}

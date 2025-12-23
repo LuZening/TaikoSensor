@@ -48,7 +48,7 @@ typedef struct {
 
     /* Key mapping */
     uint8_t hid_keycode;               // USB HID key code for this sensor
-
+    uint16_t drumcontroller_keycode;
     /* LED indicator */
     uint16_t led_pin;                  // LED pin for this sensor
     GPIO_TypeDef* led_port;            // LED GPIO port
@@ -104,14 +104,14 @@ typedef struct {
 extern PiezoSensor_t g_sensors[SENSORS_ACTIVE];
 extern TriggerFSM_t g_trigger_fsm;
 extern uint16_t g_adc_dma_buffer[DMA_BUFFER_SAMPLES];
-extern uint32_t g_system_ms;
+extern volatile uint32_t g_system_ms;
 /* Function Prototypes */
 
 /* Initialization */
 void piezosensor_init(void);
 
 /* Envelope Extraction (called from ADC callback) */
-void extract_envelope_from_samples(uint16_t *samples, uint16_t sample_offset);
+void extract_envelope_from_samples(volatile uint16_t *samples, uint16_t sample_offset);
 
 /* FSM Processing (called from main loop or at 1ms intervals) */
 void trigger_fsm_process(void);

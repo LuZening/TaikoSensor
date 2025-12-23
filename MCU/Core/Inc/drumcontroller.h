@@ -1,0 +1,65 @@
+/*
+ * drumcontroller.h
+ *
+ *  Created on: 2025年12月13日
+ *      Author: cpholzn
+ */
+
+#ifndef INC_DRUMCONTROLLER_H_
+#define INC_DRUMCONTROLLER_H_
+
+#define JOYSTICK_BUTTON_Y 0x0001U
+
+#define JOYSTICK_BUTTON_B 0x0002U
+
+#define JOYSTICK_BUTTON_A 0x0004U
+
+#define JOYSTICK_BUTTON_X 0x0008U
+
+#define JOYSTICK_BUTTON_L 0x0010U
+
+#define JOYSTICK_BUTTON_R 0x0020U
+
+#define JOYSTICK_BUTTON_ZL 0x0040U
+
+#define JOYSTICK_BUTTON_ZR 0x0080U
+
+#define JOYSTICK_BUTTON_MINUS 0x0100U
+
+#define JOYSTICK_BUTTON_PLUS 0x0200U
+
+#define JOYSTICK_BUTTON_LCLICK 0x0400U
+
+#define JOYSTICK_BUTTON_RCLICK 0x0800U
+
+#define JOYSTICK_BUTTON_HOME 0x1000U
+
+#define JOYSTICK_BUTTON_CAPTURE 0x2000U
+
+
+#define JOYSTICK_HAT_UP 0x00U
+#define JOYSTICK_HAT_UP_RIGHT 0x01U
+#define JOYSTICK_HAT_RIGHT 0x02U
+#define JOYSTICK_HAT_DOWN_RIGHT 0x03U
+#define JOYSTICK_HAT_DOWN 0x04U
+#define JOYSTICK_HAT_DOWN_LEFT 0x05U
+#define JOYSTICK_HAT_LEFT 0x06U
+#define JOYSTICK_HAT_UP_LEFT 0x07U
+#define JOYSTICK_HAT_NEUTRAL 0x08U
+
+#define JOYSTICK_ANALOG_MIN 0U
+#define JOYSTICK_ANALOG_NEUTRAL 128U
+#define JOYSTICK_ANALOG_MAX 255U
+
+
+typedef struct {
+  uint16_t Button;
+  uint8_t Hat;
+  uint8_t LX;
+  uint8_t LY;
+  uint8_t RX;
+  uint8_t RY;
+  uint8_t VendorSpec;
+} USB_JoystickReport_Input_t;
+extern volatile USB_JoystickReport_Input_t joystick_report;
+#endif /* INC_DRUMCONTROLLER_H_ */

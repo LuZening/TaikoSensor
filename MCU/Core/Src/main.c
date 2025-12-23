@@ -28,6 +28,7 @@
 #include "sensor_config.h"
 #include "uart_terminal.h"
 #include "usb_cdc_wrapper.h"
+#include "usbd_composite_desc.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -83,36 +84,51 @@ static void MX_TIM3_Init(void);
 /*================= LED CONTROL FUNCTIONS =================*/
 
 /**
- * @brief Handle XGOOD LED blinking when config load fails
+ * @brief Handle XGOOD LED blinking based on device state and USB mode
  * @param current_ms Current system time in milliseconds
- * @note Blinks pattern: ON for 200ms, OFF for 800ms (1 second period)
+ * @note Priority: config failure > drum controller mode > composite mode
+ *       - Config failure: Blinks pattern: ON for 200ms, OFF for 800ms (1 second period)
+ *       - Drum controller mode: Blink at 5Hz (200ms period, 100ms ON, 100ms OFF)
+ *       - Composite mode: LED stays ON
  */
 void xgood_led_blink_handler(uint32_t current_ms)
 {
-    if (!sensor_config_load_failed()) {
-        /* Config loaded successfully, don't blink */
-        return;
+    if (sensor_config_load_failed()) {
+        /* Config load failed - use failure blink pattern */
+        uint32_t elapsed = current_ms - g_xgood_blink.last_toggle_ms;
+
+        if (g_xgood_blink.led_state) {
+            /* LED is currently ON - check if 200ms have passed */
+            if (elapsed >= 200) {
+                /* Turn LED OFF (active low, so set to 1) */
+                HAL_GPIO_WritePin(XGOOD_GPIO_Port, XGOOD_Pin, GPIO_PIN_SET);
+                g_xgood_blink.led_state = false;
+                g_xgood_blink.last_toggle_ms = current_ms;
+            }
+        } else {
+            /* LED is currently OFF - check if 800ms have passed */
+            if (elapsed >= 800) {
+                /* Turn LED ON (active low, so set to 0) */
+                HAL_GPIO_WritePin(XGOOD_GPIO_Port, XGOOD_Pin, GPIO_PIN_RESET);
+                g_xgood_blink.led_state = true;
+                g_xgood_blink.last_toggle_ms = current_ms;
+            }
+        }
     }
+    else if (g_USB_device_type == DEVICE_TYPE_DRUMCONTROLLER) {
+        /* Drum controller mode - flash at 5Hz (200ms period, 100ms on, 100ms off) */
+        uint32_t elapsed = current_ms - g_xgood_blink.last_toggle_ms;
 
-    /* Check if it's time to toggle the LED */
-    uint32_t elapsed = current_ms - g_xgood_blink.last_toggle_ms;
-
-    if (g_xgood_blink.led_state) {
-        /* LED is currently ON - check if 200ms have passed */
-        if (elapsed >= 200) {
-            /* Turn LED OFF (active low, so set to 1) */
-            HAL_GPIO_WritePin(XGOOD_GPIO_Port, XGOOD_Pin, GPIO_PIN_SET);
-            g_xgood_blink.led_state = false;
+        if (elapsed >= 100) { // 100ms = half period for 5Hz
+            /* Toggle LED state */
+            g_xgood_blink.led_state = !g_xgood_blink.led_state;
+            HAL_GPIO_WritePin(XGOOD_GPIO_Port, XGOOD_Pin, g_xgood_blink.led_state ? GPIO_PIN_SET : GPIO_PIN_RESET);
             g_xgood_blink.last_toggle_ms = current_ms;
         }
-    } else {
-        /* LED is currently OFF - check if 800ms have passed */
-        if (elapsed >= 800) {
-            /* Turn LED ON (active low, so set to 0) */
-            HAL_GPIO_WritePin(XGOOD_GPIO_Port, XGOOD_Pin, GPIO_PIN_RESET);
-            g_xgood_blink.led_state = true;
-            g_xgood_blink.last_toggle_ms = current_ms;
-        }
+    }
+    else {
+        /* Composite mode - LED stays ON */
+        HAL_GPIO_WritePin(XGOOD_GPIO_Port, XGOOD_Pin, GPIO_PIN_RESET); // ON (active low)
     }
 }
 
@@ -153,6 +169,7 @@ int main(void)
 
   /* USER CODE BEGIN SysInit */
   HAL_Delay(10);
+
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -160,11 +177,22 @@ int main(void)
   MX_DMA_Init();
   MX_ADC1_Init();
   MX_USART3_UART_Init();
-  MX_USB_DEVICE_Init();
+
   MX_TIM1_Init();
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
+  // check USB device mode:
+  // any of SW1 ~ SW3 LOW 	-> 	DEVICE_USB_DRUMCONTROLLER
+  // otherwise				->	DEVICE_TYPE_KEYBOARD_CDC_COMPOSITE
 
+  uint8_t k1 = HAL_GPIO_ReadPin(K1_GPIO_Port, K1_Pin);
+  uint8_t k2 = HAL_GPIO_ReadPin(K2_GPIO_Port, K2_Pin);
+  uint8_t k3 = HAL_GPIO_ReadPin(K3_GPIO_Port, K3_Pin);
+  if((k1 == 0) || (k2 == 0) || (k3 == 0))
+	  g_USB_device_type = DEVICE_TYPE_DRUMCONTROLLER;
+  else
+	  g_USB_device_type = DEVICE_TYPE_KEYBOARD_CDC_COMPOSITE;
+  MX_USB_DEVICE_Init();
   /* Note: HAL_ADC_Start_DMA expects uint32_t*, but our buffer is uint16_t for efficiency
    * Casting to uint32_t* is safe and results in correct DMA transfer behavior */
   HAL_ADC_Start_DMA(&hadc1, (uint32_t*)arrADC1_DMA, DMA_BUFFER_SAMPLES);
@@ -548,6 +576,7 @@ void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc)
         hid_process_afterglow();
         hid_send_buffered_reports();
 
+        /* LED handling is done in main loop only to avoid interrupt context issues */
     }
 }
 
@@ -555,8 +584,6 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
     if (hadc->Instance == ADC1)
     {
-    	if(!sensor_config_load_failed())
-    		HAL_GPIO_WritePin(XGOOD_GPIO_Port, XGOOD_Pin, 1);
         /* Process second half of DMA buffer (samples 240-479) */
 //    	memcpy(arrADC1_DMA_copy, arrADC1_DMA, sizeof(arrADC1_DMA)); // for breakpoint
         extract_envelope_from_samples(arrADC1_DMA, 240);
@@ -575,9 +602,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
         hid_process_afterglow();
         hid_send_buffered_reports();
 
-        /* Debug: toggle GPIO or similar */
-        if(!sensor_config_load_failed())
-        	HAL_GPIO_WritePin(XGOOD_GPIO_Port, XGOOD_Pin, 0);
+        /* LED handling is done in main loop only to avoid interrupt context issues */
     }
 }
 

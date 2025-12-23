@@ -1,5 +1,9 @@
-Core/Src/piezosensor.o: ../Core/Src/piezosensor.c \
- ../Core/Inc/piezosensor.h ../Core/Inc/main.h \
+Core/Src/usbd_drumcontroller_wrapper.o: \
+ ../Core/Src/usbd_drumcontroller_wrapper.c \
+ ../Core/Inc/usbd_drumcontroller_wrapper.h \
+ ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h \
+ ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_def.h \
+ ../USB_DEVICE/Target/usbd_conf.h ../Core/Inc/main.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h \
  ../Core/Inc/stm32f1xx_hal_conf.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h \
@@ -30,23 +34,23 @@ Core/Src/piezosensor.o: ../Core/Src/piezosensor.c \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_usb.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd_ex.h \
- ../Core/Inc/piezo_config.h ../Core/Inc/keyboard.h \
- ../Core/Inc/drumcontroller.h ../Core/Inc/debug_output.h \
- ../Core/Inc/piezo_config.h ../Core/Inc/main.h \
- ../Middlewares/ST/STM32_USB_Device_Library/Class/HID/Inc/usbd_hid.h \
- ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h \
- ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_def.h \
- ../USB_DEVICE/Target/usbd_conf.h \
  ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_core.h \
  ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h \
  ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ctlreq.h \
- ../Core/Inc/drumcontroller.h ../Core/Inc/usbd_composite_desc.h \
+ ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ctlreq.h \
  ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_def.h \
- ../Core/Inc/uart_terminal.h ../Core/Inc/usbd_composite_wrapper.h \
- ../USB_DEVICE/App/usbd_cdc.h ../Core/Inc/usbd_composite_desc.h \
- ../Core/Inc/usbd_drumcontroller_wrapper.h ../Core/Inc/sensor_config.h
+ ../Core/Inc/usbd_composite_desc.h ../Core/Inc/usbd_composite_wrapper.h \
+ ../USB_DEVICE/App/usbd_cdc.h \
+ ../Middlewares/ST/STM32_USB_Device_Library/Class/HID/Inc/usbd_hid.h \
+ ../Core/Inc/usbd_composite_desc.h
 
-../Core/Inc/piezosensor.h:
+../Core/Inc/usbd_drumcontroller_wrapper.h:
+
+../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h:
+
+../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_def.h:
+
+../USB_DEVICE/Target/usbd_conf.h:
 
 ../Core/Inc/main.h:
 
@@ -110,46 +114,22 @@ Core/Src/piezosensor.o: ../Core/Src/piezosensor.c \
 
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd_ex.h:
 
-../Core/Inc/piezo_config.h:
-
-../Core/Inc/keyboard.h:
-
-../Core/Inc/drumcontroller.h:
-
-../Core/Inc/debug_output.h:
-
-../Core/Inc/piezo_config.h:
-
-../Core/Inc/main.h:
-
-../Middlewares/ST/STM32_USB_Device_Library/Class/HID/Inc/usbd_hid.h:
-
-../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h:
-
-../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_def.h:
-
-../USB_DEVICE/Target/usbd_conf.h:
-
 ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_core.h:
 
 ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h:
 
 ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ctlreq.h:
 
-../Core/Inc/drumcontroller.h:
-
-../Core/Inc/usbd_composite_desc.h:
+../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ctlreq.h:
 
 ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_def.h:
 
-../Core/Inc/uart_terminal.h:
+../Core/Inc/usbd_composite_desc.h:
 
 ../Core/Inc/usbd_composite_wrapper.h:
 
 ../USB_DEVICE/App/usbd_cdc.h:
 
+../Middlewares/ST/STM32_USB_Device_Library/Class/HID/Inc/usbd_hid.h:
+
 ../Core/Inc/usbd_composite_desc.h:
-
-../Core/Inc/usbd_drumcontroller_wrapper.h:
-
-../Core/Inc/sensor_config.h:
