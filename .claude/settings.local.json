@@ -4,7 +4,14 @@
       "Bash(cd:*)",
       "Bash(awk '/USER CODE BEGIN 0/{flag=1;next}/USER CODE END 0/{flag=0}flag':*)",
       "Bash(awk:*)",
-      "Bash(dir CoreIncpiezo_config.h CoreIncpiezosensor.h CoreSrcpiezosensor.c CoreSrcmain.c:*)"
+      "Bash(dir CoreIncpiezo_config.h CoreIncpiezosensor.h CoreSrcpiezosensor.c CoreSrcmain.c:*)",
+      "Bash(make)",
+      "Bash(where make:*)",
+      "Read(//c/ST/STM32CubeCLT_1.21.0/GNU-tools-for-STM32/bin//**)",
+      "Read(//c/Program Files/**)",
+      "Read(//c/Program Files \\(x86\\)/Microsoft Visual Studio//**)",
+      "Bash(\"C:/ST/STM32CubeCLT_1.21.0/GNU-tools-for-STM32/bin/arm-none-eabi-gcc.exe\" -c -mcpu=cortex-m3 -mthumb -I. -IDebug -IDrivers/CMSIS/Include -IDrivers/CMSIS/Device/ST/STM32F1xx/Include -IDrivers/STM32F1xx_HAL_Driver/Inc -ICore/Inc -IMiddlewares/ST/STM32_USB_Device_Library/Core/Inc -IMiddlewares/ST/STM32_USB_Device_Library/Class/HID/Inc -IUSB_DEVICE/App -IUSB_DEVICE/Target -fsyntax-only Core/Src/main.c)",
+      "Bash(\"C:/ST/STM32CubeCLT_1.21.0/GNU-tools-for-STM32/bin/arm-none-eabi-gcc.exe\" -c -DUSE_HAL_DRIVER -DSTM32F103xB -mcpu=cortex-m3 -mthumb -mfloat-abi=soft -I. -IDebug -IDrivers/CMSIS/Include -IDrivers/CMSIS/Device/ST/STM32F1xx/Include -IDrivers/STM32F1xx_HAL_Driver/Inc -ICore/Inc -IMiddlewares/ST/STM32_USB_Device_Library/Core/Inc -IMiddlewares/ST/STM32_USB_Device_Library/Class/HID/Inc -IUSB_DEVICE/App -IUSB_DEVICE/Target -fsyntax-only Core/Src/main.c)"
     ],
     "deny": [],
     "ask": []

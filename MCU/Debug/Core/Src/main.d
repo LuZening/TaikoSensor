@@ -34,9 +34,10 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../USB_DEVICE/Target/usbd_conf.h ../Core/Inc/piezo_config.h \
  ../Core/Inc/main.h ../Core/Inc/keyboard.h ../Core/Inc/drumcontroller.h \
  ../Core/Inc/piezosensor.h ../Core/Inc/piezo_config.h \
- ../Core/Inc/debug_output.h ../Core/Inc/debug_output.h \
- ../Core/Inc/sensor_config.h ../Core/Inc/uart_terminal.h \
- ../Core/Inc/usb_cdc_wrapper.h ../USB_DEVICE/App/usbd_cdc.h \
+ ../Core/Inc/debug_output.h ../Core/Inc/keyboard.h \
+ ../Core/Inc/debug_output.h ../Core/Inc/sensor_config.h \
+ ../Core/Inc/uart_terminal.h ../Core/Inc/usb_cdc_wrapper.h \
+ ../USB_DEVICE/App/usbd_cdc.h \
  ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h \
  ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_def.h \
  ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_core.h \
@@ -125,6 +126,8 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Core/Inc/piezo_config.h:
 
 ../Core/Inc/debug_output.h:
+
+../Core/Inc/keyboard.h:
 
 ../Core/Inc/debug_output.h:
 

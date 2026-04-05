@@ -109,13 +109,15 @@ extern volatile uint32_t g_system_ms;
 
 /* Initialization */
 void piezosensor_init(void);
-
+void init_keycodes(int i);
 /* Envelope Extraction (called from ADC callback) */
 void extract_envelope_from_samples(volatile uint16_t *samples, uint16_t sample_offset);
 
 /* FSM Processing (called from main loop or at 1ms intervals) */
 void trigger_fsm_process(void);
 void cooldown_fsm_process(void);
+void decay_adjusted_threshold(void);
+void increment_system_ms(void);
 
 /* Tournament calculation */
 void tournament_calculate_rms(uint16_t *samples, uint16_t sample_offset);
@@ -127,6 +129,7 @@ void hid_clear_report(void);
 void hid_process_afterglow(void);
 uint8_t hid_send_buffered_reports(void);
 void schedule_key_press(uint8_t sensor_id);
+
 /* Utility functions */
 uint32_t get_current_ms(void);
 

@@ -7,8 +7,8 @@ usbd_drumcontroller_wrapper.c:588:18:USBD_DrumController_GetFSCfgDesc	0	static
 usbd_drumcontroller_wrapper.c:601:18:USBD_DrumController_GetHSCfgDesc	0	static
 usbd_drumcontroller_wrapper.c:614:18:USBD_DrumController_GetOtherSpeedCfgDesc	0	static
 usbd_drumcontroller_wrapper.c:627:17:USBD_DrumController_DataIn	0	static
-usbd_drumcontroller_wrapper.c:645:17:USBD_DrumController_DataOut	0	static
-usbd_drumcontroller_wrapper.c:661:18:USBD_DrumController_GetDeviceQualifierDesc	0	static
+usbd_drumcontroller_wrapper.c:644:17:USBD_DrumController_DataOut	0	static
+usbd_drumcontroller_wrapper.c:660:18:USBD_DrumController_GetDeviceQualifierDesc	0	static
 usbd_drumcontroller_wrapper.c:159:18:USBD_FS_InterfaceStrDescriptor	8	static
 usbd_drumcontroller_wrapper.c:146:18:USBD_FS_ConfigStrDescriptor	8	static
 usbd_drumcontroller_wrapper.c:75:18:USBD_FS_ProductStrDescriptor	8	static

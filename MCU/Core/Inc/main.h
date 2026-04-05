@@ -76,7 +76,7 @@ void Error_Handler(void);
 #define XGOOD_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
-
+extern uint8_t g_k1_pressed, g_k2_pressed;
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

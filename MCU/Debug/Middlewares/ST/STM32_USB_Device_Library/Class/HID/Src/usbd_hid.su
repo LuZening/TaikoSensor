@@ -2,7 +2,7 @@ usbd_hid.c:592:18:USBD_HID_GetFSCfgDesc	0	static
 usbd_hid.c:605:18:USBD_HID_GetHSCfgDesc	0	static
 usbd_hid.c:618:18:USBD_HID_GetOtherSpeedCfgDesc	0	static
 usbd_hid.c:631:17:USBD_HID_DataIn	0	static
-usbd_hid.c:649:18:USBD_HID_GetDeviceQualifierDesc	0	static
+usbd_hid.c:648:18:USBD_HID_GetDeviceQualifierDesc	0	static
 usbd_hid.c:419:17:USBD_HID_Setup	24	static
 usbd_hid.c:395:17:USBD_HID_DeInit	8	static
 usbd_hid.c:370:17:USBD_HID_Init	8	static

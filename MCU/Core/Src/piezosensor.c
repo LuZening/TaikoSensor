@@ -16,6 +16,7 @@
 #include "uart_terminal.h"
 #include "usbd_composite_wrapper.h"
 #include "usbd_drumcontroller_wrapper.h"
+#include "drumcontroller.h"
 
 /* Forward declarations of static functions */
 static void ring_buffer_add(PiezoSensor_t *sensor, uint16_t value);
@@ -150,14 +151,7 @@ void piezosensor_init(void)
         g_sensors[i].ma_hit_time_ms = 0;
 
         /* Set keycodes */
-        if (i == 0) g_sensors[i].hid_keycode = SENSOR_0_KEYCODE;
-        else if (i == 1) g_sensors[i].hid_keycode = SENSOR_1_KEYCODE;
-        else if (i == 2) g_sensors[i].hid_keycode = SENSOR_2_KEYCODE;
-        else if (i == 3) g_sensors[i].hid_keycode = SENSOR_3_KEYCODE;
-        if (i == 0) g_sensors[i].drumcontroller_keycode = SENSOR_0_DRUMCONTROLLER_KEYCODE;
-        else if (i == 1) g_sensors[i].drumcontroller_keycode = SENSOR_1_DRUMCONTROLLER_KEYCODE;
-        else if (i == 2) g_sensors[i].drumcontroller_keycode = SENSOR_2_DRUMCONTROLLER_KEYCODE;
-        else if (i == 3) g_sensors[i].drumcontroller_keycode = SENSOR_3_DRUMCONTROLLER_KEYCODE;
+        init_keycodes(i);
         /* Set LED pins */
         if (i == 0) {
             g_sensors[i].led_pin = LED_SENSOR_0;
@@ -198,6 +192,18 @@ void piezosensor_init(void)
     memset(&g_tournament, 0, sizeof(g_tournament));
 }
 
+void init_keycodes(int i)
+{
+    /* Set keycodes */
+    if (i == 0) g_sensors[i].hid_keycode = SENSOR_0_KEYCODE;
+    else if (i == 1) g_sensors[i].hid_keycode = SENSOR_1_KEYCODE;
+    else if (i == 2) g_sensors[i].hid_keycode = SENSOR_2_KEYCODE;
+    else if (i == 3) g_sensors[i].hid_keycode = SENSOR_3_KEYCODE;
+    if (i == 0) g_sensors[i].drumcontroller_keycode = SENSOR_0_DRUMCONTROLLER_KEYCODE;
+    else if (i == 1) g_sensors[i].drumcontroller_keycode = SENSOR_1_DRUMCONTROLLER_KEYCODE;
+    else if (i == 2) g_sensors[i].drumcontroller_keycode = SENSOR_2_DRUMCONTROLLER_KEYCODE;
+    else if (i == 3) g_sensors[i].drumcontroller_keycode = SENSOR_3_DRUMCONTROLLER_KEYCODE;
+}
 /*================= ENVELOPE EXTRACTION =================*/
 
 void extract_envelope_from_samples(volatile uint16_t *samples, uint16_t sample_offset)
@@ -609,6 +615,8 @@ uint8_t hid_send_buffered_reports(void)
             	}
             }
         }
+
+
 		/* Send joystick report */
         if(g_HID_report_modified)
         {
@@ -648,6 +656,8 @@ uint8_t hid_send_buffered_reports(void)
                 }
             }
         }
+
+
 
         /* Send keyboard report, only transmit changes */
         if(g_HID_report_modified)

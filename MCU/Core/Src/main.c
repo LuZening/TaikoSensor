@@ -24,11 +24,13 @@
 /* USER CODE BEGIN Includes */
 #include "piezo_config.h"
 #include "piezosensor.h"
+#include "keyboard.h"
 #include "debug_output.h"
 #include "sensor_config.h"
 #include "uart_terminal.h"
 #include "usb_cdc_wrapper.h"
 #include "usbd_composite_desc.h"
+#include "usbd_composite_wrapper.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -67,6 +69,16 @@ typedef struct {
 } XGOOD_BlinkState_t;
 
 static XGOOD_BlinkState_t g_xgood_blink = {0};
+
+/* Key button state for sensor emulation - K1->sensor3, K2->sensor4, K3->ESC/repeat */
+static uint8_t k1_prev = 1;
+static uint32_t keys_last_ms = 0;
+static uint8_t k2_prev = 1;
+static uint8_t k3_prev = 1;
+static uint8_t k3_repeat_active = 0;
+static uint32_t k3_repeat_last_ms = 0;
+#define K3_REPEAT_INTERVAL_MS 200
+uint8_t g_k1_pressed = 0, g_k2_pressed = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -136,11 +148,13 @@ void xgood_led_blink_handler(uint32_t current_ms)
 /* USER CODE BEGIN 0 */
 
 /* Forward declarations for functions from piezosensor.c */
-void increment_system_ms(void);
-void decay_adjusted_threshold(void);
+#include "piezosensor.h"
 
 /* Include terminal processing in main loop */
 void uart_terminal_tick(uint32_t current_ms);
+
+/* Key button polling function - K1->sensor3, K2->sensor4, K3->ESC/repeat */
+void key_button_poll(void);
 
 /* USER CODE END 0 */
 
@@ -209,6 +223,7 @@ int main(void)
 
   /* Turn on XGOOD LED (active low) to indicate MCU is running */
   HAL_GPIO_WritePin(XGOOD_GPIO_Port, XGOOD_Pin, GPIO_PIN_RESET);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -566,6 +581,9 @@ void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc)
         decay_adjusted_threshold();
         increment_system_ms();
 
+        /* Poll key buttons for sensor emulation */
+        key_button_poll();
+
         /* Check if LEDs need to turn off */
         led_check_turn_off(g_system_ms);
 
@@ -591,6 +609,8 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
         cooldown_fsm_process();
         decay_adjusted_threshold();
         increment_system_ms();
+        /* Poll key buttons for sensor emulation */
+        key_button_poll();
 
         /* Check if LEDs need to turn off */
         led_check_turn_off(g_system_ms);
@@ -600,9 +620,97 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 
         /* Process afterglow expirations and send buffered HID reports */
         hid_process_afterglow();
+        /* Poll key buttons for sensor emulation */
         hid_send_buffered_reports();
 
         /* LED handling is done in main loop only to avoid interrupt context issues */
+    }
+}
+
+/**
+ * @brief Key button polling function for sensor emulation
+ *
+ * K1 -> sensor 3 (left center) trigger
+ * K2 -> sensor 4 (left rim) trigger
+ * K3 -> ESC key (short click), or repeat sensor 3 (long press 500ms, repeat every 200ms)
+ */
+void key_button_poll(void)
+{
+	static uint8_t key_overwritten = 0;
+    uint8_t k1 = HAL_GPIO_ReadPin(K1_GPIO_Port, K1_Pin);
+    uint8_t k2 = HAL_GPIO_ReadPin(K2_GPIO_Port, K2_Pin);
+    uint8_t k3 = HAL_GPIO_ReadPin(K3_GPIO_Port, K3_Pin);
+    uint32_t now = g_system_ms;
+
+    // K1 -> sensor 2 (right center) on press edge
+    if (k1 == 0 && k1_prev == 1) {
+    	g_k1_pressed = 1;
+    	// overwrite the key code
+    	g_sensors[1].drumcontroller_keycode = JOYSTICK_BUTTON_A | JOYSTICK_BUTTON_Y; // X for calibrate
+    	g_sensors[1].hid_keycode = KEY_J; // J for calibrate
+    	schedule_key_press(1);
+    	keys_last_ms = now;
+    	key_overwritten = 1;
+    }
+
+    k1_prev = k1;
+
+    // K2 -> sensor 4 (left rim) on press edge
+    if (k2 == 0 && k2_prev == 1) {
+    	g_k2_pressed = 1;
+    	// overwrite the key code
+    	g_sensors[1].drumcontroller_keycode = JOYSTICK_BUTTON_A | JOYSTICK_BUTTON_X; // X for calibrate
+    	g_sensors[1].hid_keycode = KEY_J; // J for calibrate
+    	schedule_key_press(1);
+    	keys_last_ms = now;
+    	key_overwritten = 1;
+    }
+    k2_prev = k2;
+
+    // K3 handling:
+    // - Short click: ESC key
+    // - Long press (hold 500ms): enter repeat mode, sends sensor 3 every 200ms
+    // - Click again while repeating: exit repeat mode
+    if (k3 == 0 && k3_prev == 1) {
+        // K3 just pressed
+        if (k3_repeat_active) {
+            // Was in repeat mode - exit it
+            k3_repeat_active = 0;
+        } else {
+            // Wasn't repeating - send ESC key (uses sensor 1's structure but with ESC keycode)
+            g_sensors[2].hid_keycode = KEY_ESC;
+            schedule_key_press(2);
+            g_sensors[2].hid_keycode = SENSOR_1_KEYCODE;
+
+            // Start long-press timer to enter repeat mode
+            key_overwritten = 1;
+            k3_repeat_last_ms = now;
+        }
+        keys_last_ms = now;
+    }
+    else if (k3 == 0 && !k3_repeat_active) {
+        // K3 held - check for long press (500ms) to enter repeat mode
+        if (now - k3_repeat_last_ms >= 500) {
+            k3_repeat_active = 1;
+            k3_repeat_last_ms = now;
+        }
+    }
+
+    if (k3_repeat_active && k3 == 0) {
+        // Repeat mode active - send sensor 3 every 200ms
+        if (now - k3_repeat_last_ms >= K3_REPEAT_INTERVAL_MS) {
+            schedule_key_press(2);  // sensor 3
+            k3_repeat_last_ms = now;
+        }
+    }
+
+    k3_prev = k3;
+
+    // recover overwritten key codes
+    if((now - keys_last_ms > 1000) &&  (key_overwritten))
+    {
+    	for(int isensor = 0; isensor < SENSORS_ACTIVE; ++isensor) init_keycodes(isensor);
+    	key_overwritten = 0;
     }
 }
 
